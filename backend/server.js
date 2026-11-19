@@ -40,8 +40,12 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Menjalankan server
-app.listen(PORT, () => {
-  console.log(`Server TintaKita aktif di port ${PORT}`);
-  console.log(`URL: http://localhost:${PORT}`);
-});
+// Menjalankan server secara lokal (tidak dipanggil di Vercel Serverless)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Server TintaKita aktif di port ${PORT}`);
+    console.log(`URL: http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
