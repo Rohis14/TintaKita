@@ -9,9 +9,9 @@ if (connectionString && connectionString.includes('sslmode=require')) {
 
 const pool = new Pool({
   connectionString,
-  ssl: {
-    rejectUnauthorized: false,
-  },
+  ssl: {rejectUnauthorized: false},
+  max: 3,
+  idleTimeoutMillis: 30000,
 });
 
 pool.on('error', (err) => {
