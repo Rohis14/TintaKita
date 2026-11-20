@@ -118,6 +118,97 @@ PreferredSizeWidget brandAppBar({
   );
 }
 
+/// Layout autentikasi responsif: split-screen di Desktop/Web (>= 760px),
+/// header navy melengkung di HP.
+class AuthLayout extends StatelessWidget {
+  const AuthLayout({super.key, required this.child, this.showBack = false});
+
+  final Widget child;
+  final bool showBack;
+
+  static const _tagline =
+      'Pesan cetak lebih mudah,\nprogres terpantau langsung.';
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth >= 760) {
+            return Row(
+              children: [
+                Expanded(
+                  flex: 5,
+                  child: Container(
+                    color: AppColors.navy,
+                    padding: const EdgeInsets.all(40),
+                    child: const Center(child: BrandLogo(tagline: _tagline)),
+                  ),
+                ),
+                Expanded(
+                  flex: 6,
+                  child: Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(32),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 420),
+                        child: AppCard(
+                          padding: const EdgeInsets.all(28),
+                          margin: EdgeInsets.zero,
+                          child: child,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+
+          final top = MediaQuery.paddingOf(context).top;
+          return SingleChildScrollView(
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.fromLTRB(
+                    24,
+                    top + (showBack ? 12 : 48),
+                    24,
+                    40,
+                  ),
+                  decoration: const BoxDecoration(
+                    color: AppColors.navy,
+                    borderRadius: BorderRadius.vertical(
+                      bottom: Radius.circular(32),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      if (showBack)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            tooltip: 'Kembali',
+                            color: Colors.white,
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.arrow_back),
+                          ),
+                        ),
+                      const BrandLogo(tagline: _tagline),
+                    ],
+                  ),
+                ),
+                Padding(padding: const EdgeInsets.all(24), child: child),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
 class NavItem {
   const NavItem({
     required this.label,
