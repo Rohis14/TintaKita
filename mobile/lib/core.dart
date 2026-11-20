@@ -189,6 +189,39 @@ String qty(dynamic v) {
   return n == n.roundToDouble() ? n.toInt().toString() : n.toString();
 }
 
+/// "anton diwara" -> "Anton Diwara"
+String titleCase(String s) {
+  return s
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .map((w) => '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}')
+      .join(' ');
+}
+
+/// ISO timestamp -> "12 Nov, 14:08"
+String formatDate(dynamic raw) {
+  final dt = DateTime.tryParse('${raw ?? ''}')?.toLocal();
+  if (dt == null) return '';
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
+  ];
+  final hh = dt.hour.toString().padLeft(2, '0');
+  final mm = dt.minute.toString().padLeft(2, '0');
+  return '${dt.day} ${months[dt.month - 1]}, $hh:$mm';
+}
+
 String errText(Object e) => e.toString().replaceFirst('Exception: ', '');
 
 String msgOf(Map<String, dynamic> res, String fallback) {

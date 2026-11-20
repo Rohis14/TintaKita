@@ -112,7 +112,8 @@ class _AdminScreenState extends State<AdminScreen> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFD92D20)),
+              backgroundColor: const Color(0xFFD92D20),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Hapus'),
           ),
@@ -123,8 +124,11 @@ class _AdminScreenState extends State<AdminScreen> {
 
     final res = await ApiService.deleteProduct(product['id']);
     if (!mounted) return;
-    showSnack(context, msgOf(res, 'Produk dihapus'),
-        isError: res['success'] != true);
+    showSnack(
+      context,
+      msgOf(res, 'Produk dihapus'),
+      isError: res['success'] != true,
+    );
     _load(silent: true);
   }
 
@@ -171,7 +175,9 @@ class _AdminScreenState extends State<AdminScreen> {
       ..sort((a, b) => toNum(b['id']).compareTo(toNum(a['id'])));
 
     final income = _orders
-        .where((o) => OrderStatus.from('${o['status']}') == OrderStatus.completed)
+        .where(
+          (o) => OrderStatus.from('${o['status']}') == OrderStatus.completed,
+        )
         .fold<num>(0, (sum, o) => sum + toNum(o['total_harga']));
 
     return RefreshList(
@@ -183,24 +189,31 @@ class _AdminScreenState extends State<AdminScreen> {
           children: [
             Row(
               children: [
-                _stat(Icons.hourglass_top_rounded, OrderStatus.pending.color,
-                    '${_count([OrderStatus.pending])}', 'Menunggu'),
+                _stat(
+                  Icons.hourglass_top_rounded,
+                  OrderStatus.pending.color,
+                  '${_count([OrderStatus.pending])}',
+                  'Menunggu',
+                ),
                 const SizedBox(width: 8),
                 _stat(
-                    Icons.print_rounded,
-                    OrderStatus.printing.color,
-                    '${_count([OrderStatus.designVerified, OrderStatus.printing])}',
-                    'Diproses'),
+                  Icons.print_rounded,
+                  OrderStatus.printing.color,
+                  '${_count([OrderStatus.designVerified, OrderStatus.printing])}',
+                  'Diproses',
+                ),
                 const SizedBox(width: 8),
-                _stat(Icons.payments_outlined, OrderStatus.ready.color,
-                    rupiah(income), 'Pendapatan'),
+                _stat(
+                  Icons.payments_outlined,
+                  OrderStatus.ready.color,
+                  rupiah(income),
+                  'Pendapatan',
+                ),
               ],
             ),
             const SizedBox(height: 16),
             FilterBar(
-              labels: [
-                for (final x in _filters) '${x.$1} (${_count(x.$2)})',
-              ],
+              labels: [for (final x in _filters) '${x.$1} (${_count(x.$2)})'],
               selected: _filter,
               onSelected: (i) => setState(() => _filter = i),
             ),
@@ -210,9 +223,7 @@ class _AdminScreenState extends State<AdminScreen> {
       emptyIcon: Icons.receipt_long_outlined,
       emptyTitle: 'Tidak ada pesanan',
       emptySubtitle: 'Pesanan dengan status ini belum ada.',
-      children: [
-        for (final o in list) OrderCard(order: o, showCustomer: true),
-      ],
+      children: [for (final o in list) OrderCard(order: o, showCustomer: true)],
     );
   }
 
@@ -226,91 +237,90 @@ class _AdminScreenState extends State<AdminScreen> {
       emptySubtitle: 'Ketuk "Tambah Produk" untuk membuat produk pertama.',
       children: [
         for (final p in _products)
-          Builder(builder: (_) {
-            final active = isTrue(p['is_active']);
-            return AppCard(
-              padding: const EdgeInsets.all(12),
-              child: Opacity(
-                opacity: active ? 1 : 0.55,
-                child: Row(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: SizedBox(
-                        width: 64,
-                        height: 64,
-                        child: NetImage(p['thumbnail_url'],
-                            icon: Icons.inventory_2_outlined),
+          Builder(
+            builder: (_) {
+              final active = isTrue(p['is_active']);
+              return AppCard(
+                padding: const EdgeInsets.all(12),
+                child: Opacity(
+                  opacity: active ? 1 : 0.55,
+                  child: Row(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: NetImage(
+                            p['thumbnail_url'],
+                            icon: Icons.inventory_2_outlined,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '${p['name']}',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                                fontWeight: FontWeight.w700, fontSize: 15),
-                          ),
-                          const SizedBox(height: 4),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 4,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                '${rupiah(p['harga'])} / ${p['unit']}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.navy,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '${p['name']}',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 4,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  '${rupiah(p['harga'])} / ${p['unit']}',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: AppColors.navy,
+                                  ),
                                 ),
-                              ),
-                              Pill(
-                                active ? 'Aktif' : 'Nonaktif',
-                                color: active
-                                    ? const Color(0xFF12A150)
-                                    : AppColors.textSoft,
-                              ),
-                            ],
-                          ),
+                                Pill(
+                                  active ? 'Aktif' : 'Nonaktif',
+                                  color: active
+                                      ? const Color(0xFF12A150)
+                                      : AppColors.textSoft,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      PopupMenuButton<String>(
+                        onSelected: (v) {
+                          if (v == 'edit') _openProductForm(product: p);
+                          if (v == 'delete') _confirmDelete(p);
+                        },
+                        itemBuilder: (_) => const [
+                          PopupMenuItem(value: 'edit', child: Text('Edit')),
+                          PopupMenuItem(value: 'delete', child: Text('Hapus')),
                         ],
                       ),
-                    ),
-                    PopupMenuButton<String>(
-                      onSelected: (v) {
-                        if (v == 'edit') _openProductForm(product: p);
-                        if (v == 'delete') _confirmDelete(p);
-                      },
-                      itemBuilder: (_) => const [
-                        PopupMenuItem(value: 'edit', child: Text('Edit')),
-                        PopupMenuItem(value: 'delete', child: Text('Hapus')),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: brandAppBar(
-        subtitle: 'Admin',
-        actions: [
-          IconButton(
-            tooltip: 'Keluar',
-            onPressed: () => logout(context),
-            icon: const Icon(Icons.logout),
-          ),
-        ],
-      ),
+    return AdaptiveScaffold(
+      subtitle: 'Admin',
+      selectedIndex: _tab,
+      onSelect: (i) => setState(() => _tab = i),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : (_tab == 0 ? _ordersTab() : _productsTab()),
@@ -321,22 +331,18 @@ class _AdminScreenState extends State<AdminScreen> {
               label: const Text('Tambah Produk'),
             )
           : null,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long),
-            label: 'Pesanan',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.inventory_2_outlined),
-            selectedIcon: Icon(Icons.inventory_2),
-            label: 'Produk',
-          ),
-        ],
-      ),
+      items: const [
+        NavItem(
+          label: 'Pesanan',
+          icon: Icons.receipt_long_outlined,
+          selectedIcon: Icons.receipt_long,
+        ),
+        NavItem(
+          label: 'Produk',
+          icon: Icons.inventory_2_outlined,
+          selectedIcon: Icons.inventory_2,
+        ),
+      ],
     );
   }
 }
@@ -445,8 +451,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
             children: [
               Text(
                 isEdit ? 'Edit Produk' : 'Tambah Produk Baru',
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -473,13 +481,17 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Foto produk',
-                            style: TextStyle(fontWeight: FontWeight.w700)),
+                        Text(
+                          'Foto produk',
+                          style: TextStyle(fontWeight: FontWeight.w700),
+                        ),
                         SizedBox(height: 2),
                         Text(
                           'Ketuk gambar untuk memilih foto (opsional).',
                           style: TextStyle(
-                              fontSize: 12.5, color: AppColors.textSoft),
+                            fontSize: 12.5,
+                            color: AppColors.textSoft,
+                          ),
                         ),
                       ],
                     ),
@@ -536,8 +548,9 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
                   title: const Text('Produk aktif'),
-                  subtitle:
-                      const Text('Produk nonaktif tidak tampil di katalog'),
+                  subtitle: const Text(
+                    'Produk nonaktif tidak tampil di katalog',
+                  ),
                   value: _isActive,
                   onChanged: (val) => setState(() => _isActive = val),
                 ),
@@ -546,8 +559,10 @@ class _ProductFormSheetState extends State<_ProductFormSheet> {
                   padding: const EdgeInsets.only(top: 10),
                   child: Text(
                     _err!,
-                    style:
-                        const TextStyle(color: Color(0xFFD92D20), fontSize: 13),
+                    style: const TextStyle(
+                      color: Color(0xFFD92D20),
+                      fontSize: 13,
+                    ),
                   ),
                 ),
               const SizedBox(height: 16),

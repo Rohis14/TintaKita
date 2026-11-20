@@ -118,6 +118,102 @@ PreferredSizeWidget brandAppBar({
   );
 }
 
+class NavItem {
+  const NavItem({
+    required this.label,
+    required this.icon,
+    required this.selectedIcon,
+    this.badgeCount = 0,
+  });
+
+  final String label;
+  final IconData icon;
+  final IconData selectedIcon;
+  final int badgeCount;
+
+  Widget _icon(IconData data) => Badge(
+        isLabelVisible: badgeCount > 0,
+        label: Text('$badgeCount'),
+        child: Icon(data),
+      );
+}
+
+/// Scaffold responsif: NavigationBar di HP, NavigationRail di Desktop/Web (>= 720px).
+class AdaptiveScaffold extends StatelessWidget {
+  const AdaptiveScaffold({
+    super.key,
+    required this.subtitle,
+    required this.body,
+    required this.items,
+    required this.selectedIndex,
+    required this.onSelect,
+    this.floatingActionButton,
+  });
+
+  final String subtitle;
+  final Widget body;
+  final List<NavItem> items;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+  final Widget? floatingActionButton;
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 720;
+
+    return Scaffold(
+      appBar: brandAppBar(
+        subtitle: subtitle,
+        actions: [
+          IconButton(
+            tooltip: 'Keluar',
+            onPressed: () => logout(context),
+            icon: const Icon(Icons.logout),
+          ),
+        ],
+      ),
+      body: wide
+          ? Row(
+              children: [
+                NavigationRail(
+                  selectedIndex: selectedIndex,
+                  onDestinationSelected: onSelect,
+                  backgroundColor: Colors.white,
+                  indicatorColor: AppColors.cyan.withValues(alpha: 0.2),
+                  labelType: NavigationRailLabelType.all,
+                  destinations: [
+                    for (final item in items)
+                      NavigationRailDestination(
+                        icon: item._icon(item.icon),
+                        selectedIcon: item._icon(item.selectedIcon),
+                        label: Text(item.label),
+                      ),
+                  ],
+                ),
+                const VerticalDivider(width: 1, color: AppColors.border),
+                Expanded(child: body),
+              ],
+            )
+          : body,
+      floatingActionButton: floatingActionButton,
+      bottomNavigationBar: wide
+          ? null
+          : NavigationBar(
+              selectedIndex: selectedIndex,
+              onDestinationSelected: onSelect,
+              destinations: [
+                for (final item in items)
+                  NavigationDestination(
+                    icon: item._icon(item.icon),
+                    selectedIcon: item._icon(item.selectedIcon),
+                    label: item.label,
+                  ),
+              ],
+            ),
+    );
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 // KOMPONEN DASAR
 // ─────────────────────────────────────────────────────────────
@@ -330,6 +426,7 @@ class RefreshList extends StatelessWidget {
     this.header,
     this.error,
     this.padding = const EdgeInsets.fromLTRB(16, 16, 16, 24),
+    this.maxWidth = 840,
   });
 
   final Future<void> Function() onRefresh;
@@ -340,32 +437,38 @@ class RefreshList extends StatelessWidget {
   final Widget? header;
   final String? error;
   final EdgeInsetsGeometry padding;
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: padding,
-        children: [
-          if (header != null) ?header,
-          if (children.isEmpty)
-            error != null
-                ? EmptyState(
-                    icon: Icons.wifi_off_rounded,
-                    title: 'Gagal memuat data',
-                    subtitle: error,
-                    onRetry: () => onRefresh(),
-                  )
-                : EmptyState(
-                    icon: emptyIcon,
-                    title: emptyTitle,
-                    subtitle: emptySubtitle,
-                  )
-          else
-            ...children,
-        ],
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: padding,
+            children: [
+              ?header,
+              if (children.isEmpty)
+                error != null
+                    ? EmptyState(
+                        icon: Icons.wifi_off_rounded,
+                        title: 'Gagal memuat data',
+                        subtitle: error,
+                        onRetry: () => onRefresh(),
+                      )
+                    : EmptyState(
+                        icon: emptyIcon,
+                        title: emptyTitle,
+                        subtitle: emptySubtitle,
+                      )
+              else
+                ...children,
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -560,6 +663,9 @@ class OrderCard extends StatelessWidget {
     final status = OrderStatus.from('${order['status']}');
     final notes = '${order['notes'] ?? ''}'.trim();
     final reason = '${order['reject_reason'] ?? ''}'.trim();
+    final created = formatDate(order['created_at']);
+    final custName = '${order['pelanggan_nama'] ?? ''}'.trim();
+    final opName = '${order['operator_nama'] ?? ''}'.trim();
     final compact = VisualDensity.compact;
 
     return AppCard(
@@ -574,7 +680,9 @@ class OrderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Pesanan #${order['id']}',
+                      created.isEmpty
+                          ? 'Pesanan #${order['id']}'
+                          : 'Pesanan #${order['id']} • $created',
                       style: const TextStyle(
                         fontSize: 12,
                         color: AppColors.textSoft,
@@ -603,8 +711,10 @@ class OrderCard extends StatelessWidget {
           if (showCustomer)
             _info(
               Icons.person_outline,
-              '${order['pelanggan_nama'] ?? '-'} • ${order['pelanggan_hp'] ?? '-'}',
+              '${custName.isEmpty ? '-' : titleCase(custName)} • ${order['pelanggan_hp'] ?? '-'}',
             ),
+          if (showCustomer && opName.isNotEmpty)
+            _info(Icons.badge_outlined, 'Operator: ${titleCase(opName)}'),
           if (notes.isNotEmpty) _info(Icons.sticky_note_2_outlined, notes),
           const SizedBox(height: 14),
           if (status == OrderStatus.rejected)

@@ -1,14 +1,14 @@
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   // Otomatis pakai localhost di Web, dan IPv4 laptop di HP fisik
-  static String get baseUrl =>
-      kIsWeb ? 'http://localhost:5000/api' : 'http://10.44.21.186:5000/api';
+  // static String get baseUrl =>
+  //     kIsWeb ? 'http://localhost:5000/api' : 'http://10.44.21.186:5000/api';
+  static const String baseUrl = 'https://backend-seven-theta-65.vercel.app/api';
 
   static const _sessionKeys = ['token', 'user_id', 'nama', 'email', 'role'];
 

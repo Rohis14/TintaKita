@@ -150,18 +150,22 @@ class _PelangganScreenState extends State<PelangganScreen> {
               children: [
                 Text(
                   '${p['name']}',
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    height: 1.25,
+                  ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   '${p['deskripsi'] ?? ''}',
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppColors.textSoft,
+                    height: 1.25,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -209,12 +213,12 @@ class _PelangganScreenState extends State<PelangganScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            _nama.isEmpty ? 'Halo!' : 'Halo, $_nama 👋',
+            _nama.isEmpty ? 'Katalog Cetak' : 'Halo, ${titleCase(_nama)}',
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 2),
           const Text(
-            'Mau cetak apa hari ini?',
+            'Pilih layanan cetak dan unggah desainmu.',
             style: TextStyle(color: AppColors.textSoft),
           ),
         ],
@@ -229,33 +233,39 @@ class _PelangganScreenState extends State<PelangganScreen> {
         emptyIcon: Icons.storefront_outlined,
         emptyTitle: 'Belum ada produk',
         emptySubtitle: 'Produk cetak akan muncul di sini.',
+        maxWidth: 1080,
         children: const [],
       );
     }
 
     return RefreshIndicator(
       onRefresh: _refresh,
-      child: CustomScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        slivers: [
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            sliver: SliverToBoxAdapter(child: greeting),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-            sliver: SliverGrid.builder(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 240,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 0.62,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1080),
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                sliver: SliverToBoxAdapter(child: greeting),
               ),
-              itemCount: _products.length,
-              itemBuilder: (_, i) => _productCard(_products[i]),
-            ),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: SliverGrid.builder(
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 260,
+                    mainAxisExtent: 345,
+                    mainAxisSpacing: 14,
+                    crossAxisSpacing: 14,
+                  ),
+                  itemCount: _products.length,
+                  itemBuilder: (_, i) => _productCard(_products[i]),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -297,44 +307,26 @@ class _PelangganScreenState extends State<PelangganScreen> {
         .where((o) => OrderStatus.from('${o['status']}') == OrderStatus.ready)
         .length;
 
-    return Scaffold(
-      appBar: brandAppBar(
-        subtitle: 'Pelanggan',
-        actions: [
-          IconButton(
-            tooltip: 'Keluar',
-            onPressed: () => logout(context),
-            icon: const Icon(Icons.logout),
-          ),
-        ],
-      ),
+    return AdaptiveScaffold(
+      subtitle: 'Pelanggan',
+      selectedIndex: _tab,
+      onSelect: (i) => setState(() => _tab = i),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : (_tab == 0 ? _catalogTab() : _ordersTab()),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tab,
-        onDestinationSelected: (i) => setState(() => _tab = i),
-        destinations: [
-          const NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            selectedIcon: Icon(Icons.storefront),
-            label: 'Katalog',
-          ),
-          NavigationDestination(
-            icon: Badge(
-              isLabelVisible: siap > 0,
-              label: Text('$siap'),
-              child: const Icon(Icons.receipt_long_outlined),
-            ),
-            selectedIcon: Badge(
-              isLabelVisible: siap > 0,
-              label: Text('$siap'),
-              child: const Icon(Icons.receipt_long),
-            ),
-            label: 'Pesanan Saya',
-          ),
-        ],
-      ),
+      items: [
+        const NavItem(
+          label: 'Katalog',
+          icon: Icons.storefront_outlined,
+          selectedIcon: Icons.storefront,
+        ),
+        NavItem(
+          label: 'Pesanan Saya',
+          icon: Icons.receipt_long_outlined,
+          selectedIcon: Icons.receipt_long,
+          badgeCount: siap,
+        ),
+      ],
     );
   }
 }
@@ -410,6 +402,7 @@ class _OrderSheetState extends State<_OrderSheet> {
   @override
   Widget build(BuildContext context) {
     final p = widget.product;
+    final desc = '${p['deskripsi'] ?? ''}'.trim();
     final jumlah = double.tryParse(_qtyCtrl.text.replaceAll(',', '.')) ?? 0;
     final total = toNum(p['harga']) * jumlah;
 
@@ -461,6 +454,16 @@ class _OrderSheetState extends State<_OrderSheet> {
                   ),
                 ],
               ),
+              if (desc.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text(
+                  desc,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: AppColors.textSoft,
+                  ),
+                ),
+              ],
               const SizedBox(height: 18),
               TextFormField(
                 controller: _qtyCtrl,
@@ -468,9 +471,7 @@ class _OrderSheetState extends State<_OrderSheet> {
                   decimal: true,
                 ),
                 onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: 'Jumlah (${p['unit']})',
-                ),
+                decoration: InputDecoration(labelText: 'Jumlah (${p['unit']})'),
                 validator: (v) {
                   final n = double.tryParse((v ?? '').replaceAll(',', '.'));
                   return (n == null || n <= 0)
